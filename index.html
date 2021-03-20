@@ -1,0 +1,96 @@
+<html>
+
+<head>
+    <script src="https://unpkg.com/brain.js"></script>
+    <script>
+
+        // provide optional config object (or undefined). Defaults shown.
+        const config = {
+            binaryThresh: 0.5,
+            hiddenLayers: [2], // array of ints for the sizes of the hidden layers in the network
+            activation: 'sigmoid', // supported activation types: ['sigmoid', 'relu', 'leaky-relu', 'tanh'],
+            leakyReluAlpha: 0.01, // supported for activation type 'leaky-relu'
+        };
+
+        // create a simple feed forward neural network with backpropagation
+        const net = new brain.NeuralNetwork(config);
+        initialTrain = [
+            { input: [.255, 0, 0], output: [.2] }, // red
+            { input: [.255, .255, 0], output: [.3] }, //yellow 
+            { input: [0, 0, .255], output: [.4] }, // blue
+            { input: [0, .255, 0], output: [.5] }, // green
+        ]
+
+        if (localStorage.getItem('TrainNNColor')) {
+            console.log('exite')
+            initialTrain = JSON.parse(localStorage.getItem('TrainNNColor'));
+        }
+
+        trainRes = net.train(initialTrain);
+
+        console.log(trainRes)
+
+        const getRgb = (hex, returnString) => {
+            var r = parseInt(hex.slice(1, 3), 16) / 1000,
+                g = parseInt(hex.slice(3, 5), 16) / 1000,
+                b = parseInt(hex.slice(5, 7), 16) / 1000;
+            if (returnString)
+                res = "rgb(" + r + ", " + g + ", " + b + ")";
+            else
+                res = [r, g, b]
+            return res
+        }
+
+
+        const incrementTrain = () => {
+            input = document.getElementById("input").textContent.split(',');
+            answer = [parseFloat(document.getElementById("answer").value)];
+
+            if (answer === NaN || !answer[0] || answer[0] > 0.9 || input.length < 2) return
+
+            tempArr = []
+            input.forEach(i => {
+                tempArr.push(parseFloat(i))
+            })
+            input = tempArr;
+
+            initialTrain.push({ input, output:answer })
+
+            console.log('Input -> ', input, ' | Answer -> ', answer[0])
+
+            localStorage.setItem('TrainNNColor', JSON.stringify(initialTrain));
+
+            const trainRes = net.train(initialTrain);
+
+            console.log(trainRes)
+        }
+
+        const getResult = () => {
+            const input = getRgb(document.getElementById('color').value, false)
+            const output = net.run(input);
+
+            document.getElementById("input").innerText = input;
+            document.getElementById("output").innerText = output;
+        }
+    </script>
+</head>
+
+<body>
+    <label> Input -> <label id="input"></label></label>
+    <br>
+    <label> Output -> <label id="output"></label></label>
+    <p> .2 = Red, .3 = yellow, .4 = blue, .5 = green, </p>
+
+    <input type="color" style="width: 100px; height: 100px;" id="color" />
+    <button onclick="getResult()"> Get Collor </button>
+    <br><br>
+    <input type="number" id="answer">
+    <button onclick="incrementTrain()"> Rigth ? </button>
+
+    <br>
+
+
+
+</body>
+
+</html>
